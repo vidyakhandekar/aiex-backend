@@ -5,7 +5,9 @@ import { ConfigService } from '@nestjs/config';
 import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import { RequestIdInterceptor } from './common/interceptors/request-id.interceptor';
 import { WINSTON_MODULE_PROVIDER } from 'nest-winston';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
@@ -48,6 +50,9 @@ async function bootstrap(): Promise<void> {
   const winstonLogger = app.get(WINSTON_MODULE_PROVIDER);
   app.useGlobalFilters(new AllExceptionsFilter(winstonLogger));
 
+  // ── Global Interceptors ─────────────────────────────────────────────────────
+  app.useGlobalInterceptors(new RequestIdInterceptor());
+
   // ── CORS ────────────────────────────────────────────────────────────────────
   const corsOrigins = config.get<string[]>('app.corsOrigins', ['http://localhost:5173']);
   app.enableCors({
@@ -56,6 +61,16 @@ async function bootstrap(): Promise<void> {
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   });
+
+  // ── Swagger ─────────────────────────────────────────────────────────────────
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('AIEx API')
+    .setDescription('The AIEx Multi-Tenant Exam Platform API documentation')
+    .setVersion(apiVersion)
+    .addBearerAuth()
+    .build();
+  const document = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup(`${apiPrefix}/docs`, app, document);
 
   // ── Start ───────────────────────────────────────────────────────────────────
   const port = config.get<number>('app.port', 3000);
@@ -66,6 +81,7 @@ async function bootstrap(): Promise<void> {
     `🚀 Server running → http://localhost:${port}/${apiPrefix}/v${apiVersion}`,
     'Bootstrap',
   );
+  winstonNest.log(`📚 Swagger Docs  → http://localhost:${port}/${apiPrefix}/docs`, 'Bootstrap');
   winstonNest.log(`📋 Health check  → http://localhost:${port}/health`, 'Bootstrap');
 }
 

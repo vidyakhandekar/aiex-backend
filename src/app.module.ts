@@ -4,6 +4,7 @@ import configuration, { validationSchema } from './config/configuration';
 import { LoggerModule } from './logger/logger.module';
 import { SupabaseModule } from './database/supabase/supabase.module';
 import { HealthModule } from './health/health.module';
+import { AuthModule } from './modules/auth/auth.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { HealthModule } from './health/health.module';
 
     // ── Features ────────────────────────────────────────────────────────────
     HealthModule,
+    AuthModule,
   ],
 })
 export class AppModule {}
