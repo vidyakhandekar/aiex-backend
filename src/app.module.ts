@@ -5,6 +5,7 @@ import { LoggerModule } from './logger/logger.module';
 import { SupabaseModule } from './database/supabase/supabase.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { TenantsModule } from './modules/tenants/tenants.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AuthModule } from './modules/auth/auth.module';
     // ── Features ────────────────────────────────────────────────────────────
     HealthModule,
     AuthModule,
+    TenantsModule,
   ],
 })
 export class AppModule {}
