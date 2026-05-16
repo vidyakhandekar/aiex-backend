@@ -2,6 +2,7 @@ import { Injectable, InternalServerErrorException, NotFoundException, ConflictEx
 import { SupabaseService } from '../../database/supabase/supabase.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
+import { InviteTenantAdminDto } from './dto/invite-tenant-admin.dto';
 
 @Injectable()
 export class TenantsService {
@@ -77,5 +78,50 @@ export class TenantsService {
     }
 
     return data;
+  }
+
+  async inviteTenantAdmin(tenantId: string, inviteDto: InviteTenantAdminDto) {
+    const client = this.supabaseService.getClient();
+
+    // 1. Verify tenant exists
+    await this.findOne(tenantId);
+
+    // 2. Invite user via Supabase Auth
+    const { data: authData, error: authError } = await client.auth.admin.inviteUserByEmail(inviteDto.email, {
+      data: {
+        full_name: inviteDto.full_name,
+      },
+    });
+
+    if (authError) {
+      if (authError.message.includes('already registered')) {
+        throw new ConflictException('A user with this email already exists.');
+      }
+      throw new InternalServerErrorException(`Failed to invite admin: ${authError.message}`);
+    }
+
+    const userId = authData.user.id;
+
+    // 3. Link user to the tenant as 'tenant_admin'
+    const { error: memberError } = await client
+      .from('tenant_members')
+      .insert([
+        {
+          tenant_id: tenantId,
+          user_id: userId,
+          role: 'tenant_admin',
+        },
+      ]);
+
+    if (memberError) {
+      throw new InternalServerErrorException(`User invited, but failed to link to tenant: ${memberError.message}`);
+    }
+
+    return {
+      message: 'Tenant admin invited successfully',
+      user_id: userId,
+      email: inviteDto.email,
+      role: 'tenant_admin',
+    };
   }
 }

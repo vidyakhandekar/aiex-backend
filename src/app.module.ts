@@ -6,6 +6,7 @@ import { SupabaseModule } from './database/supabase/supabase.module';
 import { HealthModule } from './health/health.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
+import { UsersModule } from './modules/users/users.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { TenantsModule } from './modules/tenants/tenants.module';
     HealthModule,
     AuthModule,
     TenantsModule,
+    UsersModule,
   ],
 })
 export class AppModule {}

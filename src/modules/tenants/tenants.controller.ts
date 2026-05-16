@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { TenantsService } from './tenants.service';
 import { CreateTenantDto } from './dto/create-tenant.dto';
 import { UpdateTenantDto } from './dto/update-tenant.dto';
+import { InviteTenantAdminDto } from './dto/invite-tenant-admin.dto';
 import { SupabaseAuthGuard } from '../../common/guards/supabase-auth.guard';
 import { TenantContextGuard } from '../../common/guards/tenant-context.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -43,5 +44,16 @@ export class TenantsController {
   @ApiOperation({ summary: 'Update a specific tenant' })
   update(@Param('id') id: string, @Body() updateTenantDto: UpdateTenantDto) {
     return this.tenantsService.update(id, updateTenantDto);
+  }
+
+  @Post(':id/admins/invite')
+  @Roles('super_admin')
+  @ApiOperation({ summary: 'Invite a new tenant admin to a specific tenant (super_admin only)' })
+  @ApiResponse({ status: 201, description: 'Admin successfully invited' })
+  inviteAdmin(
+    @Param('id') id: string, 
+    @Body() inviteDto: InviteTenantAdminDto
+  ) {
+    return this.tenantsService.inviteTenantAdmin(id, inviteDto);
   }
 }
